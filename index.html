@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تنبيه تذاكر الاتحاد - سلة</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      direction: rtl;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .icon { font-size: 48px; margin-bottom: 1rem; }
+    h1 { font-size: 22px; color: #1a1a2e; margin-bottom: .5rem; }
+    p { font-size: 14px; color: #666; margin-bottom: 1.5rem; line-height: 1.7; }
+    input[type=email] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid #ddd;
+      border-radius: 10px;
+      font-size: 15px;
+      text-align: right;
+      margin-bottom: 1rem;
+      outline: none;
+      font-family: inherit;
+      transition: border-color .2s;
+    }
+    input[type=email]:focus { border-color: #185FA5; }
+    button {
+      width: 100%;
+      padding: 13px;
+      background: #185FA5;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .2s;
+    }
+    button:hover { background: #0c447c; }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+    #msg {
+      margin-top: 1rem;
+      font-size: 14px;
+      min-height: 20px;
+    }
+    .ok { color: #2e7d32; }
+    .err { color: #c62828; }
+    .footer {
+      margin-top: 1.5rem;
+      font-size: 12px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">🎟️</div>
+    <h1>تنبيه تذاكر الاتحاد</h1>
+    <p>سجّل إيميلك وهنبعتلك إشعار فور ما تنزل تذاكر ماتشات الاتحاد (سلة) على تذكرتي</p>
+
+    <input type="email" id="emailInput" placeholder="إيميلك هنا..." />
+    <button id="btn" onclick="subscribe()">🔔 اشترك في التنبيهات</button>
+    <div id="msg"></div>
+
+    <div class="footer">مش هنبعت إيميلات تانية — بس إشعار لما تنزل التذاكر</div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
