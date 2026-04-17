@@ -2,8 +2,8 @@ import requests, smtplib, os, json, csv
 from email.mime.text import MIMEText
 from io import StringIO
 
-API_URL = "https://www.tazkarti.com/data/matches-list-json.json"
-SHEET_ID = os.environ["1cf2yHUa4ACAIiRuCftf8QeMJZ7n48hATJxF5TmcUIiM"]  # ضعه في GitHub Secrets
+API_URL  = "https://www.tazkarti.com/data/matches-list-json.json"
+SHEET_ID = os.environ["SHEET_ID"]  # في GitHub Secrets اسمه SHEET_ID وقيمته: 1cf2yHUa4ACAIiRuCftf8QeMJZ7n48hATJxF5TmcUIiM
 SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv"
 
 def get_emails():
@@ -16,8 +16,8 @@ def get_emails():
 def send_email(to, subject, body):
     msg = MIMEText(body, "plain", "utf-8")
     msg["Subject"] = subject
-    msg["From"] = os.environ["EMAIL_FROM"]
-    msg["To"] = to
+    msg["From"]    = os.environ["EMAIL_FROM"]
+    msg["To"]      = to
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
         s.login(os.environ["EMAIL_FROM"], os.environ["EMAIL_PASS"])
         s.send_message(msg)
@@ -27,20 +27,32 @@ def check():
     matches = json.loads(r.text)
 
     for m in matches:
-        t1    = m.get("teamName1", "").lower()
-        t2    = m.get("teamName2", "").lower()
-        t1ar  = m.get("teamNameAr1", "") or ""
-        t2ar  = m.get("teamNameAr2", "") or ""
-        stad  = m.get("stadiumName", "").lower()
-        tour  = m.get("tournament", {}).get("nameEn", "").lower()
+        t1   = m.get("teamName1", "").lower()
+        t2   = m.get("teamName2", "").lower()
+        t1ar = m.get("teamNameAr1", "") or ""
+        t2ar = m.get("teamNameAr2", "") or ""
+        stad = m.get("stadiumName", "").lower()
+        tour = m.get("tournament", {}).get("nameEn", "").lower()
 
-        is_ittihad = any(x in t for x in ["alithad","ittihad","الاتحاد"]
-                         for t in [t1, t2, t1ar, t2ar])
-        is_telecom = any(x in t for x in ["telecom","تليكوم"]
-                         for t in [t1, t2, t1ar, t2ar])
-        is_basket  = "basket" in tour or "hassan" in stad
+        teams = [t1, t2, t1ar, t2ar]
 
-        if (is_ittihad or is_telecom) and is_basket:
+        is_target = any(
+            x in t for x in [
+                "alithad", "ittihad", "الاتحاد",   # الاتحاد السكندري
+                "telecom", "تليكوم",                # تليكوم
+                "zamalek", "الزمالك",               # الزمالك ✅ جديد
+                "ahly", "al ahly", "الأهلي",        # الأهلي  ✅ جديد
+            ]
+            for t in teams
+        )
+
+        is_basket = (
+            "basket" in tour or
+            "hassan" in stad or
+            "سلة"   in (m.get("tournament", {}).get("nameAr", "") or "")
+        )
+
+        if is_target and is_basket:
             name1 = m.get("teamNameAr1") or m.get("teamName1", "")
             name2 = m.get("teamNameAr2") or m.get("teamName2", "")
             date  = m.get("kickOffTime", "")
