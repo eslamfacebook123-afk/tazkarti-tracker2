@@ -1,4 +1,4 @@
-import requests, smtplib, os, json, csv
+import requests, smtplib, os, json, csv, subprocess
 from email.mime.text import MIMEText
 from io import StringIO
 
@@ -16,6 +16,11 @@ def load_sent():
 def save_sent(sent_ids):
     with open(SENT_FILE, "w") as f:
         json.dump(list(sent_ids), f)
+    subprocess.run(["git", "config", "user.email", "bot@github.com"])
+    subprocess.run(["git", "config", "user.name", "GitHub Bot"])
+    subprocess.run(["git", "add", SENT_FILE])
+    subprocess.run(["git", "commit", "-m", "update sent.json"])
+    subprocess.run(["git", "push"])
 
 def get_emails():
     r = requests.get(SHEET_URL, timeout=15)
@@ -35,46 +40,41 @@ def send_email(to, subject, body):
 
 def check():
     sent_ids = load_sent()
-
     r = requests.get(API_URL, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
     matches = json.loads(r.text)
-
     found_any = False
 
     for m in matches:
         match_id = str(m.get("matchId", ""))
-
-        # ✅ لو بعتنا عليه قبل كده، تجاهله
         if match_id in sent_ids:
             print(f"⏭️ ماتش {match_id} بعتنا عليه قبل كده، skip")
             continue
 
-        t1   = m.get("teamName1", "").lower()
-        t2   = m.get("teamName2", "").lower()
-        t1ar = m.get("teamNameAr1", "") or ""
-        t2ar = m.get("teamNameAr2", "") or ""
-        stad = m.get("stadiumName", "").lower()
-        tour = m.get("tournament", {}).get("nameEn", "").lower()
+        t1     = m.get("teamName1", "").lower()
+        t2     = m.get("teamName2", "").lower()
+        t1ar   = m.get("teamNameAr1", "") or ""
+        t2ar   = m.get("teamNameAr2", "") or ""
+        tour   = m.get("tournament", {}).get("nameEn", "").lower()
         tourar = m.get("tournament", {}).get("nameAr", "") or ""
-        teams = [t1, t2, t1ar, t2ar]
+        teams  = [t1, t2, t1ar, t2ar]
 
-        is_target = any(
-            x in t for x in [
-                "alithad", "ittihad", "الاتحاد",
-                "telecom", "تليكوم",
-                "zamalek", "الزمالك",
-                "ahly", "al ahly", "الأهلي", "الأهلى",
-            ]
+        is_ahly = any(
+            x in t for x in ["ahly", "al ahly", "الأهلي", "الاهلي", "الأهلى"]
             for t in teams
         )
-
-        is_basket = (
-            "basket" in tour or
-            "hassan" in stad or
-            "سلة" in tourar
+        is_pyramids = any(
+            x in t for x in ["pyramid", "pyramids", "بيراميدز"]
+            for t in teams
+        )
+        is_football = (
+            "football" in tour or
+            "soccer" in tour or
+            "كرة القدم" in tourar or
+            "دوري" in tourar or
+            "كأس" in tourar
         )
 
-        if is_target and is_basket:
+        if is_ahly and is_pyramids and is_football:
             found_any = True
             name1 = m.get("teamNameAr1") or m.get("teamName1", "")
             name2 = m.get("teamNameAr2") or m.get("teamName2", "")
@@ -89,7 +89,7 @@ def check():
                 try:
                     send_email(
                         email,
-                        "🎟️ تذاكر ماتش سلة نزلت على تذكرتي!",
+                        "🎟️ تذاكر الأهلي vs بيراميدز نزلت على تذكرتي!",
                         f"الماتش: {name1} vs {name2}\n"
                         f"التاريخ: {date}\n"
                         f"الاستاد: {venue}\n\n"
